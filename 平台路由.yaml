@@ -1,0 +1,53 @@
+version: 1
+default_mode: read_only
+session_split:
+  domestic_discovery:
+    name: "国内电商发现"
+    browser_spaces: [douyin, bilibili, xiaohongshu_manual]
+    scope: "公开搜索结果、标题、作者、时间、互动量；只读低频"
+  domestic_verification:
+    name: "国内电商核验"
+    browser_spaces: [wechat_public, douyin, bilibili]
+    scope: "少量详情页、官方规则、公开字幕；按候选清单核验"
+  overseas_research:
+    name: "海外市场研究"
+    engine_sources: [reddit, x, youtube, web]
+    scope: "X/Reddit/YouTube/网页公开资料；无授权时保留受限状态"
+  technical_research:
+    name: "技术资料核验"
+    engine_sources: [web, github, reddit, youtube]
+    scope: "官方文档、代码、issue、论文和可复现实验"
+  transcription:
+    name: "视频转写"
+    scope: "只处理已选中的本地视频；Windows RTX 5070；输出写外置SSD"
+domestic_ecommerce:
+  browser_spaces:
+    - douyin
+    - bilibili
+    - xiaohongshu_manual
+    - wechat_public
+  engine_sources: []
+  forbidden_defaults:
+    - github
+  notes: "抖音/B站用 Ego Lite；小红书只用低频人工会话；公众号优先公开文章。"
+overseas:
+  browser_spaces: []
+  engine_sources:
+    - reddit
+    - x
+    - youtube
+    - web
+  notes: "由 last30days 并行聚合。"
+technical:
+  browser_spaces: []
+  engine_sources:
+    - web
+    - github
+    - reddit
+    - youtube
+  notes: "GitHub 只在技术主题明确时启用。"
+general:
+  browser_spaces: []
+  engine_sources:
+    - web
+  notes: "主题不明确时先走网页，禁止擅自扩大到所有平台。"

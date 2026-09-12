@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+.env
+*.env
+!*.env.example
+vendor/last30days-skill/.venv/
+vendor/last30days-skill/.pytest_cache/

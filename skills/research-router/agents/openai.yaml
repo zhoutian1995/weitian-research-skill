@@ -1,0 +1,6 @@
+interface:
+  display_name: "全网资料搜索"
+  short_description: "按任务和地区路由全网资料搜索"
+  default_prompt: "使用 $research-router 搜索并整理这个主题，先给出平台路由和覆盖范围，再返回可复核证据。"
+policy:
+  allow_implicit_invocation: true
