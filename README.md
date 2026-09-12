@@ -1,73 +1,83 @@
-# 资料搜索工作台
+# 维天说｜全网资料搜索 Skill
 
-这是周老师的多平台资料搜索仓库。它把搜索任务按来源分流，避免把国内电商问题错误地交给 GitHub：
+一个按**任务、地区和证据类型**自动分流的资料搜索工作台，解决“国内电商问题却跑去 GitHub 搜”的常见误路由。
 
-项目目标和验收标准见 [目标与验收标准.md](目标与验收标准.md)。
+> 当前版本已经提交并公开发布：<https://github.com/zhoutian1995/weitian-research-skill>
 
-所有外部 Skill 必须先下载到 `~/projects`，经过只读审计和隔离冒烟测试，再决定是否改造和接入。流程见 [SKILL引入审核.md](SKILL引入审核.md)。
+## 它解决什么问题
 
-小红书候选项目的审核结果见 [小红书Skill审核.md](小红书Skill审核.md)。
+- 国内电商、消费和创作者话题：优先抖音、B站、小红书、公众号。
+- 海外市场和行业观点：优先 X（Twitter）、Reddit、YouTube 和网页。
+- 技术问题：只有明确属于技术求证时，才启用官方文档、GitHub、论文和技术社区。
+- 视频资料：先拿到候选链接，再交给 Windows RTX 5070 + faster-whisper 转写。
+- 所有结果统一为带来源、作者、时间、互动量、链接和状态的证据记录。
 
-- 国内电商：Ego Lite 搜抖音、B站和需要登录的公众号页面；公开公众号文章优先走网页，小红书保持低频、人工确认。
-- 海外观点：last30days 聚合 **X（Twitter）**、Reddit、YouTube 和网页。
-- 技术资料：只有用户明确要求时才搜索 GitHub、论文和官方文档。
-- 视频：后续在 Windows RTX 5070 上用 faster-whisper 转写，媒体和转写结果落到外接 SSD KnowledgeBase。
-- BibiGPT：暂记为未来可选云端后端，当前不接入、不购买会员。
+它不做点赞、评论、关注、发布，也不导出 Cookie；小红书采用低频、公开页面或人工登录的 Ego Lite 会话。
 
-## 当前组成
+## 会话怎么拆
 
-`skills/research-router/vendor/` 是审计过的上游源码快照，来源为 [mvanhorn/last30days-skill](https://github.com/mvanhorn/last30days-skill)。
+| 会话 | 主要来源 | 输出 |
+| --- | --- | --- |
+| 国内电商发现 | 抖音、B站、小红书 | 候选清单和用户声音 |
+| 国内电商核验 | 公众号、规则页、详情页 | 可追溯正文和一手证据 |
+| 海外市场研究 | X、Reddit、YouTube、网页 | 海外观点和讨论证据 |
+| 技术资料核验 | 官方文档、GitHub、论文 | API、实现和事实核验 |
+| 视频转写 | Windows RTX 5070 | JSON、Markdown、SRT 和时间戳 |
 
-`skills/research-router/SKILL.md` 是可安装的 Skill 入口；配套脚本和上游快照都在同一 Skill 目录内。仓库根目录的 `scripts/` 只保留向后兼容的薄包装，`scripts/资料搜索.py` 仍可生成任务清单并调用上游引擎处理海外来源。
+会话之间只交接结构化候选清单和证据文件，不交接 Cookie 或临时页面状态。
 
-安装时请复制整个 `skills/research-router/` 目录，不能只复制 `SKILL.md`。国内 Ego Lite 路由在本机 Python 3.9+ 已验证；海外/技术路由调用捆绑的 last30days runtime，需要 Python 3.12+。Windows 视频转写另需 Windows、CUDA 和 `faster-whisper`，详见 [Windows转写说明.md](Windows转写说明.md)。
+## 快速开始
 
-任务清单会同时给出 `session_plan`：国内发现、国内核验、海外研究、技术核验和视频转写分别运行；会话之间只交接结构化候选清单和证据文件，不交接 Cookie 或临时页面状态。
+复制整个 `skills/research-router/` 目录，不能只复制 `SKILL.md`。
 
-`scripts/速度压测.py` 用于记录路由和公开搜索的耗时、返回码及平台状态。默认只测路由，不联网；加 `--run` 才会调用允许的上游公开来源。结果写入外接 SSD 的 `scratch/资料搜索`。
-
-`scripts/证据规范化.py` 把 Ego Lite 或上游引擎导出的结果统一为 `platform/title/author/published_at/engagement/url/evidence_type/status` 字段；缺字段会标记为 `partial`，不会用猜测补齐。
-
-视频转写使用 `scripts/视频转文字.py`；Windows 推荐调用 ASCII 文件名的 `scripts/transcribe-windows.ps1`，它会复用已验证的 5070 环境并自动补齐 CUDA DLL 路径。
-
-## 使用
-
-先查看路由，不会访问平台，也不会读取 Cookie：
+国内路由（只生成 Ego Lite 任务清单，不联网）：
 
 ```bash
 python3 scripts/资料搜索.py "1688 电商痛点" --task pain_points --region domestic --dry-run
 ```
 
-只运行海外公开来源：
+海外快速发现：
 
 ```bash
-python3 scripts/资料搜索.py "跨境电商履约痛点" --task pain_points --region overseas --speed fast --run
+python3 skills/research-router/scripts/资料搜索.py "cross-border ecommerce pain points" \
+  --task pain_points --region overseas --speed fast --run
 ```
 
-记录一次路由速度（不访问平台）：
+运行环境：国内路由在 Python 3.9+ 已验证；海外和技术路由需要 Python 3.12+。Windows 转写需要 CUDA、faster-whisper 和外接 SSD KnowledgeBase，见 [Windows转写说明.md](Windows转写说明.md)。
 
-```bash
-python3 scripts/速度压测.py "1688 电商痛点" --task pain_points --region domestic --speeds fast balanced
-```
+## 速度和真实边界
 
-需要 YouTube 视频、评论和字幕时再开第二阶段：
+- 国内路由清单生成：约 0.03–0.04 秒。
+- Ego Lite 抖音、B站、小红书页面采集：约 3 秒级，受登录态和页面加载影响。
+- 海外 fast：实测约 4.6 秒和 79.2 秒，公开源响应和退避会造成明显波动。
+- RTX 5070 转写：中文视频实测约 48 倍实时。
 
-```bash
-python3 scripts/资料搜索.py "跨境电商履约痛点" --task pain_points --region overseas --speed balanced --run
-```
+因此默认先 fast，再对少量重点来源进入 balanced/deep；不会为了“全平台”每次都等待视频字幕和评论。
 
-`fast` 是默认档位，优先快速判断；`balanced` 会加入 YouTube，速度通常会增加到 1～3 分钟，字幕缺失时还可能更久。
+## 安全和合规边界
 
-Windows 转写示例：
+- 小红书、抖音、B站只读，低频、人工确认；不做验证码对抗、指纹伪装或批量视觉爬取。
+- X 没有显式授权时标记为 `requires_explicit_auth`，不会把未授权误报为“没有讨论”。
+- 下载、转写和运行产物写入外接 SSD KnowledgeBase；SSD 不可用时停止，不回退到 NAS 或内置盘。
+- 不要把登录 Cookie、API key、个人数据或私密资料提交到仓库。
 
-```powershell
-.\scripts\transcribe-windows.ps1 "E:\WilleSpace-Work\KnowledgeBase\10-raw\social-media\待转写\视频.mp4"
-```
+## 目录
 
-`large-v3-turbo` 是默认模型；在 RTX 5070 上对 5191 秒中文视频实测约 109 秒（约 48 倍实时）。
+- `skills/research-router/`：可安装 Skill、脚本和经过审核的上游运行时。
+- `scripts/`：兼容旧命令的薄包装。
+- `平台路由.yaml`：机器可读的平台和会话路由。
+- `目标与验收标准.md`：项目目标、验收条件和未完成项。
+- `NOTICE.md`：上游项目归属和公开发布说明。
+- `assets/contact/wechat-contact.jpg`：微信联系二维码。
 
-脚本不会执行点赞、评论、关注、发布或批量抓取。小红书、抖音和 B 站的登录态搜索仍由独立 Ego Lite 会话人工完成。
+## 联系周老师
 
-## GitHub 发布说明
+微信联系：
 
-当前仓库是可审计的工作副本，尚未创建 commit 或 remote。公开发布前请阅读 [NOTICE.md](NOTICE.md)，选择仓库根目录的许可证，并决定是否保留约 33 MB 的上游测试夹具和媒体文件；建议先以 Private 仓库试运行。上游 last30days-skill 的 MIT 许可文件保留在 `skills/research-router/vendor/LICENSE`。
+![微信联系二维码](assets/contact/wechat-contact.jpg)
+
+公众号二维码将在确认正确素材后补充。
+
+## 许可证
+
+本项目采用 MIT License。上游 `last30days-skill` 的版权和 MIT 文本保留在 `skills/research-router/vendor/LICENSE`；详见 [NOTICE.md](NOTICE.md)。
