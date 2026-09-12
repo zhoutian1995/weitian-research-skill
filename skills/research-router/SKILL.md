@@ -96,6 +96,8 @@ API 评估以连续多轮实测为依据：首轮发现可在数秒内完成时�
 
 ## 具体执行
 
+开始任务前可运行 `python3 scripts/环境诊断.py` 做跨平台只读检查：Windows 重点看 NVIDIA GPU/CUDA 与 faster-whisper，macOS 重点看芯片、内存、本地浏览器会话和外接 SSD。诊断只输出环境能力，不上传系统信息。
+
 1. 把用户问题改写成 2～5 个平台适配查询词，保留原词、同义词和行业黑话。
 2. 运行 `python3 skills/research-router/scripts/资料搜索.py "主题" --task <任务> --region <地区> --speed fast --run` 生成首轮清单。旧的 `--profile` 仍可用于固定快捷路由。
 3. 国内抖音、B站、小红书使用独立 Ego Lite 会话；需要登录时交还页面给用户处理。

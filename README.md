@@ -30,6 +30,14 @@
 
 复制整个 `skills/research-router/` 目录，不能只复制 `SKILL.md`。
 
+先做一次本机环境诊断（只读，不联网、不读取 Cookie）：
+
+```bash
+python3 scripts/环境诊断.py
+```
+
+Windows 会检查 NVIDIA GPU、驱动/CUDA 可见性和 faster-whisper；macOS 会检查芯片、内存和本地浏览器会话条件。两种系统都检查 Python、ffmpeg 和外接 SSD 路径。
+
 国内电商痛点（只生成 Ego Lite 任务清单，不联网）：
 
 ```bash
