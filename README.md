@@ -76,7 +76,9 @@ python3 skills/research-router/scripts/资料搜索.py "cross-border ecommerce p
 
 ![微信联系二维码](assets/contact/wechat-contact.jpg)
 
-公众号二维码将在确认正确素材后补充。
+公众号：
+
+![公众号二维码](assets/contact/wechat-official-account.webp)
 
 ## 许可证
 
