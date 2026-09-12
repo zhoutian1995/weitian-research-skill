@@ -30,18 +30,27 @@
 
 复制整个 `skills/research-router/` 目录，不能只复制 `SKILL.md`。
 
-国内路由（只生成 Ego Lite 任务清单，不联网）：
+国内电商痛点（只生成 Ego Lite 任务清单，不联网）：
 
 ```bash
-python3 scripts/资料搜索.py "1688 电商痛点" --task pain_points --region domestic --dry-run
+python3 scripts/资料搜索.py "跨境电商卖家最常见的售后问题" --task pain_points --region domestic --dry-run
 ```
 
-海外快速发现：
+海外市场快速发现：
 
 ```bash
-python3 skills/research-router/scripts/资料搜索.py "cross-border ecommerce pain points" \
+python3 skills/research-router/scripts/资料搜索.py "cross-border returns software competitors" \
   --task pain_points --region overseas --speed fast --run
 ```
+
+技术资料核验：
+
+```bash
+python3 skills/research-router/scripts/资料搜索.py "faster-whisper CUDA 量化部署" \
+  --task technical --region global --speed fast --dry-run
+```
+
+视频转写：先把已选中的视频放到外接 SSD，再在 Windows RTX 5070 上执行 `scripts/transcribe-windows.ps1`。
 
 运行环境：国内路由在 Python 3.9+ 已验证；海外和技术路由需要 Python 3.12+。Windows 转写需要 CUDA、faster-whisper 和外接 SSD KnowledgeBase，见 [Windows转写说明.md](Windows转写说明.md)。
 
@@ -52,7 +61,7 @@ python3 skills/research-router/scripts/资料搜索.py "cross-border ecommerce p
 - 海外 fast：实测约 4.6 秒和 79.2 秒，公开源响应和退避会造成明显波动。
 - RTX 5070 转写：中文视频实测约 48 倍实时。
 
-因此默认先 fast，再对少量重点来源进入 balanced/deep；不会为了“全平台”每次都等待视频字幕和评论。
+内部电商痛点样本的页面采集和证据整理已完成验证；具体主题、平台和数量会随任务变化。默认先 fast，再对少量重点来源进入 balanced/deep；不会为了“全平台”每次都等待视频字幕和评论。
 
 ## 安全和合规边界
 
