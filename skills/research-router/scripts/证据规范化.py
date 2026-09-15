@@ -34,6 +34,8 @@ def first(row: dict[str, Any], *keys: str) -> Any:
 
 def normalize_status(row: dict[str, Any]) -> str:
     raw = str(first(row, "status", "抓取状态", "状态") or "ok").lower()
+    if raw == "auth_check_required":
+        return raw
     if "explicit_auth" in raw or "明确授权" in raw:
         return "requires_explicit_auth"
     if any(token in raw for token in ("login", "登录", "auth", "授权")):
@@ -54,14 +56,21 @@ def normalize_row(row: dict[str, Any], default_platform: str | None = None) -> d
     record = {
         "platform": platform,
         "title": title,
-        "author": first(row, "author", "作者", "uploader", "账号"),
+        "author": first(row, "author", "作者", "uploader", "账号", "account"),
         "published_at": first(row, "published_at", "发布时间", "日期", "date"),
         "engagement": first(row, "engagement", "互动量", "metrics", "stats"),
         "url": url,
         "evidence_type": first(row, "evidence_type", "证据类型") or "discovery",
         "status": normalize_status(row),
-        "retrieved_at": first(row, "retrieved_at", "采集时间") or datetime.now(timezone.utc).isoformat(),
+        "retrieved_at": first(row, "retrieved_at", "采集时间", "captured_at") or datetime.now(timezone.utc).isoformat(),
     }
+    # Preserve observed provenance without promoting discovery dates to article dates.
+    for key in ("visible_text", "published_at_raw", "published_at_source",
+                "published_date_from_search", "original_url", "final_url",
+                "canonical_url", "url_status", "body_status", "limitations",
+                "discovery", "query", "search_elapsed_ms"):
+        if key in row:
+            record[key] = row[key]
     if not platform or not title or not url:
         record["status"] = "partial" if record["status"] == "ok" else record["status"]
         record["missing_fields"] = [key for key, value in (("platform", platform), ("title", title), ("url", url)) if not value]
@@ -78,7 +87,9 @@ def load_rows(path: Path) -> list[dict[str, Any]]:
         value = payload.get(key) if isinstance(payload, dict) else None
         if isinstance(value, list):
             return [row for row in value if isinstance(row, dict)]
-    raise SystemExit("输入JSON没有找到 items/results/evidence/rows 数组。")
+    if isinstance(payload, dict) and first(payload, "title", "标题", "name") and first(payload, "url", "链接", "link"):
+        return [payload]
+    raise SystemExit("输入JSON需要证据数组、items/results/evidence/rows 数组或包含标题和链接的单条记录。")
 
 
 def main() -> int:

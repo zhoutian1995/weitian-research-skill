@@ -53,7 +53,7 @@ description: 面向全网资料调研，按任务意图、地区语言和证据�
 
 ## 路由原则
 
-1. 先判断地区和主题，再决定平台。国内跨境、电商、消费和创作者话题优先抖音、B站、小红书；海外观点优先 X、Reddit、YouTube。
+1. 先判断地区和主题，再决定平台。国内跨境、电商、消费和创作者话题优先抖音、B站、小红书、公众号；海外观点优先 X、Reddit、YouTube。
 2. GitHub 只用于代码、技术实现、开源项目和 issue。它不是国内电商用户声音的默认来源。
 3. 小红书只做公开页面或用户已登录的 Ego Lite 会话，低频、少量、人工确认；不做验证码对抗、指纹伪装、Cookie 导出或批量视觉爬取。
 4. 所有平台默认只读，不点赞、不评论、不关注、不发布。
@@ -64,10 +64,14 @@ description: 面向全网资料调研，按任务意图、地区语言和证据�
 | 场景 | 首选 | 备用 | 说明 |
 |---|---|---|---|
 | 国内电商用户痛点 | Ego Lite：抖音、B站 | 小红书人工会话 | 先抓真实经验，再做主题聚类 |
-| 国内行业解释/案例 | 公众号公开文章 | Ego Lite 登录页面 | 作为背景和交叉核验，单独标记作者立场与发布日期 |
+| 国内行业解释/案例 | Ego Lite：搜狗微信发现 → 公众号原文 | 公开网页搜索或用户提供文章链接 | 作为背景和交叉核验，单独标记作者立场与发布日期 |
 | 海外市场观点 | last30days：Reddit、X、YouTube、Web | Ego Lite | 并行聚合、按互动信号排序 |
 | 技术实现/开源 | 官方文档、GitHub、论文 | Reddit/YouTube | 仅在技术主题明确时启用 |
 | 视频资料 | 平台页面 + 元数据 | Windows RTX 5070 转写 | 下载和转写只能写入外接 SSD KnowledgeBase |
+
+## 微信公众号搜索
+
+国内行业、案例和产品研究默认纳入公众号；用户痛点任务中只把作者的实际经历作为用户证据，厂商软文单独标注。执行时读取 [公众号搜索与正文核验](references/公众号搜索与正文核验.md)，先发现候选，再低频打开原文。当前 CLI 生成浏览器搜索计划，不是自动公众号采集器。
 
 ## X 搜索
 
@@ -106,7 +110,7 @@ API 评估以连续多轮实测为依据：首轮发现可在数秒内完成时�
 
 1. 把用户问题改写成 2～5 个平台适配查询词，保留原词、同义词和行业黑话。
 2. 运行 `python3 scripts/资料搜索.py "主题" --task <任务> --region <地区> --speed fast --run` 生成首轮清单。旧的 `--profile` 仍可用于固定快捷路由。
-3. 国内抖音、B站、小红书使用独立 Ego Lite 会话；需要登录时交还页面给用户处理。
+3. 国内抖音、B站、小红书、公众号使用 Ego Lite；公众号按专用参考文档完成原文核验；需要登录时交还页面给用户处理。
 4. 海外聚合使用 last30days。涉及 X 时先阅读 [X搜索与原帖核验](references/X搜索与原帖核验.md)，检查可用的 Grok/xurl 授权；缺少环境变量不能证明未授权。优先发现候选后回读原帖，失败不能写成“没有讨论”。
 5. 只对入选的 3～10 条视频进入 balanced/deep；转写结果写外接 SSD KnowledgeBase，并保留原始链接和时间戳。
 6. 结果按证据强度和来源独立性排序，明确样本偏差、时间范围和未覆盖平台。
@@ -115,20 +119,13 @@ API 评估以连续多轮实测为依据：首轮发现可在数秒内完成时�
 
 ## 最低输出字段
 
-每条证据尽量包含：`platform`、`title`、`author`、`published_at`、`engagement`、`url`、`evidence_type`、`status`。失败状态使用 `no-results`、`requires_login`、`requires_explicit_auth`、`rate-limited`、`unreachable` 或 `partial`，不要伪造空结果。
+每条证据尽量包含：`platform`、`title`、`author`、`published_at`、`engagement`、`url`、`evidence_type`、`status`。失败状态使用 `no-results`、`requires_login`、`requires_explicit_auth`、`auth_check_required`、`rate-limited`、`unreachable` 或 `partial`，不要伪造空结果。
 
 页面采集完成后运行 `python3 scripts/证据规范化.py <raw.json> --platform <平台>`，将不同平台字段统一为共享证据结构。缺少标题、平台或原始链接时保留缺失标记并降级为 `partial`，禁止推测补齐。
 
 ## 示例
 
 - `1688 电商痛点` → `pain_points + domestic`：抖音/B站，小红书人工补样，1688 官方页面只做规则核验。
-- `1688 行业解决方案` → `pain_points + domestic`：公众号公开文章补充案例和方法论，不与用户一线体验混为一谈。
+- `电商 AI 客服落地案例` → 国内案例研究：公众号公开文章补充案例和方法论，不与用户一线体验混为一谈。
 - `某竞品近 30 天口碑` → `competitor + overseas`：X/Reddit 快报，YouTube 评论按需补充。
 - `faster-whisper 5070 部署` → `technical + global`：官方文档、GitHub、论文，社交平台只作经验补充。
-
-## 速度档位
-
-- `fast`（默认）：海外先跑 Reddit、X、网页，国内直接跑 Ego Lite；用于快速判断方向。
-- `balanced`：在海外快报后加入 YouTube 搜索、评论和可用字幕；预计需要 1～3 分钟。
-
-不要为了“全平台”默认开启最慢的字幕和评论链路。先快报，再针对已确认的主题做视频证据补充。

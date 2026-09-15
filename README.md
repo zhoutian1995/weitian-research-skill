@@ -152,3 +152,9 @@ assets/contact/               微信联系和公众号二维码
 本项目采用 [MIT License](LICENSE)。海外聚合运行时基于 [mvanhorn/last30days-skill](https://github.com/mvanhorn/last30days-skill)，上游许可文本保留在 `skills/research-router/vendor/LICENSE`；详细归属见 [NOTICE.md](NOTICE.md)。
 
 欢迎通过 Issue 提交平台适配、证据字段或安全边界方面的改进建议。
+
+## 微信公众号搜索
+
+国内行业和案例研究已纳入公众号：在 Ego Lite 中通过搜狗微信发现候选，再打开公众号原文核对作者、正文和日期。备用入口为公开网页搜索和用户提供的文章链接。详细流程见 [公众号搜索与正文核验](skills/research-router/references/公众号搜索与正文核验.md)。
+
+已完成一次单篇浏览器链路验证，搜索页约 9 秒；全文完整性、签名链接长期有效性及多主题稳定性仍需继续验证。当前脚本生成搜索计划，浏览器负责实际检索，不是全自动批量采集器。证据整理支持单篇记录，并保留搜索页日期、可见正文和缺失说明；厂商宣传与用户实际经历分别标注。
