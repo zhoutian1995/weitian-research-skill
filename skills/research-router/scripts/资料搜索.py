@@ -107,12 +107,12 @@ def build_manifest(topic: str, profile: str, speed: str) -> dict:
     route = PROFILES[profile]
     sources = engine_sources(profile, speed)
     status = {source: "pending" for source in route["browser_spaces"]}
-    if profile in {"overseas", "technical"}:
+    if sources:
         status.update({source: "configured_check_required" for source in sources})
-        if "x" in sources and not (
-            os.environ.get("X_BEARER_TOKEN") or os.environ.get("XAI_API_KEY")
-        ):
-            status["x"] = "requires_explicit_auth"
+        if "x" in sources:
+            # Environment keys alone cannot establish user OAuth readiness.
+            # xurl/Grok authentication must be checked separately, explicitly.
+            status["x"] = "auth_check_required"
     return {
         "schema_version": "research-run/v1",
         "created_at": datetime.now(timezone.utc).isoformat(),

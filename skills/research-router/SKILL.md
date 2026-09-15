@@ -5,6 +5,8 @@ description: 面向全网资料调研，按任务意图、地区语言和证据�
 
 # 全网资料搜索
 
+下文 scripts/ 和 references/ 路径均相对本 SKILL.md 所在目录；执行脚本前切换到此目录。
+
 这个 Skill 用于“帮我搜资料、查观点、找用户痛点、做竞品调研、整理视频内容”等请求。不要把“全网”理解成所有平台同时搜索；先选对来源，再扩大覆盖。
 
 ## 三层路由
@@ -67,6 +69,10 @@ description: 面向全网资料调研，按任务意图、地区语言和证据�
 | 技术实现/开源 | 官方文档、GitHub、论文 | Reddit/YouTube | 仅在技术主题明确时启用 |
 | 视频资料 | 平台页面 + 元数据 | Windows RTX 5070 转写 | 下载和转写只能写入外接 SSD KnowledgeBase |
 
+## X 搜索
+
+X 采用“Grok 发现或 xurl 搜索 → xurl 回读 → ID/作者/时间/正文核验”。执行前读取 [X搜索与原帖核验](references/X搜索与原帖核验.md)。xurl 是独立核验入口，当前路由脚本未自动接入；auth_check_required 表示尚未核验，不表示未授权。
+
 ## 输出要求
 
 每轮搜索先输出路由决策和平台状态，再输出证据表，最后给出结论。对登录、验证码、风控或接口失败必须如实标记，不用推测填空。
@@ -79,7 +85,7 @@ description: 面向全网资料调研，按任务意图、地区语言和证据�
 
 先 fast 后 balanced，避免为了全平台而让每次搜索都等待视频处理。
 
-每次需要比较延迟或评估 API 时，在仓库根目录运行 `python3 skills/research-router/scripts/速度压测.py "主题" --task <任务> --region <地区> --speeds fast balanced`。该命令默认只测路由、不联网；只有明确加 `--run` 才调用允许的海外公开来源。压测结果写入外接 SSD 的 `scratch/资料搜索`，记录耗时、返回码、平台/引擎来源和错误摘要。
+每次需要比较延迟或评估 API 时，在本 Skill 目录运行 `python3 scripts/速度压测.py "主题" --task <任务> --region <地区> --speeds fast balanced`。该命令默认只测路由、不联网；只有明确加 `--run` 才调用允许的海外公开来源。压测结果写入外接 SSD 的 `scratch/资料搜索`，记录耗时、返回码、平台/引擎来源和错误摘要。
 
 API 评估以连续多轮实测为依据：首轮发现可在数秒内完成时不因“更快”购买 API；只有在高频批量、稳定分页、历史数据或结构化抽取持续失败时再升级。
 
@@ -88,7 +94,7 @@ API 评估以连续多轮实测为依据：首轮发现可在数秒内完成时�
 视频处理只在用户挑选出重点链接后执行，发现阶段不调用转写：
 
 1. 平台已有字幕：直接保存字幕，最快。
-2. Windows RTX 5070：运行 `skills/research-router/scripts/视频转文字.py`，使用本地 faster-whisper，生成 JSON、Markdown 和 SRT。
+2. Windows RTX 5070：运行 `scripts/视频转文字.py`，使用本地 faster-whisper，生成 JSON、Markdown 和 SRT。
 3. `Backtthefuture/video-transcript`：作为 FunASR 备用实现，接入前必须把模型、临时文件和输出目录改到外接 SSD。
 4. BibiGPT：记录为未来可选云端后端；当前不调用、不购买会员。
 
@@ -99,9 +105,9 @@ API 评估以连续多轮实测为依据：首轮发现可在数秒内完成时�
 开始任务前可运行 `python3 scripts/环境诊断.py` 做跨平台只读检查：Windows 重点看 NVIDIA GPU/CUDA 与 faster-whisper，macOS 重点看芯片、内存、本地浏览器会话和外接 SSD。诊断只输出环境能力，不上传系统信息。
 
 1. 把用户问题改写成 2～5 个平台适配查询词，保留原词、同义词和行业黑话。
-2. 运行 `python3 skills/research-router/scripts/资料搜索.py "主题" --task <任务> --region <地区> --speed fast --run` 生成首轮清单。旧的 `--profile` 仍可用于固定快捷路由。
+2. 运行 `python3 scripts/资料搜索.py "主题" --task <任务> --region <地区> --speed fast --run` 生成首轮清单。旧的 `--profile` 仍可用于固定快捷路由。
 3. 国内抖音、B站、小红书使用独立 Ego Lite 会话；需要登录时交还页面给用户处理。
-4. 海外公开来源使用上游 last30days；X 没有显式授权时标为 `requires_explicit_auth`，不能写成“没有讨论”。
+4. 海外聚合使用 last30days。涉及 X 时先阅读 [X搜索与原帖核验](references/X搜索与原帖核验.md)，检查可用的 Grok/xurl 授权；缺少环境变量不能证明未授权。优先发现候选后回读原帖，失败不能写成“没有讨论”。
 5. 只对入选的 3～10 条视频进入 balanced/deep；转写结果写外接 SSD KnowledgeBase，并保留原始链接和时间戳。
 6. 结果按证据强度和来源独立性排序，明确样本偏差、时间范围和未覆盖平台。
 
@@ -111,7 +117,7 @@ API 评估以连续多轮实测为依据：首轮发现可在数秒内完成时�
 
 每条证据尽量包含：`platform`、`title`、`author`、`published_at`、`engagement`、`url`、`evidence_type`、`status`。失败状态使用 `no-results`、`requires_login`、`requires_explicit_auth`、`rate-limited`、`unreachable` 或 `partial`，不要伪造空结果。
 
-页面采集完成后运行 `python3 skills/research-router/scripts/证据规范化.py <raw.json> --platform <平台>`，将不同平台字段统一为共享证据结构。缺少标题、平台或原始链接时保留缺失标记并降级为 `partial`，禁止推测补齐。
+页面采集完成后运行 `python3 scripts/证据规范化.py <raw.json> --platform <平台>`，将不同平台字段统一为共享证据结构。缺少标题、平台或原始链接时保留缺失标记并降级为 `partial`，禁止推测补齐。
 
 ## 示例
 
